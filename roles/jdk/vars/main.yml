@@ -1,0 +1,2 @@
+jdk_repo_file: "jdk-8u172-linux-x64.tar.gz"
+jdk_install_dir: "{{bd_app_dir}}/jdk"

@@ -1,0 +1,53 @@
+- name: Copy Logstash
+  copy:
+    src: "files/{{logstash_repo_file}}"
+    dest: "{{bd_app_dir}}/{{logstash_repo_file}}"
+  register: copylogstash
+
+- name: Create Logstash directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ bd_user }}"
+  with_items:
+    - "{{ logstash_install_dir }}"
+    - "{{ logstash_data_dir }}"
+    - "{{ logstash_logs_dir }}"
+    - "{{ logstash_patterns_dir }}"
+
+- name: Extract Logstash
+  unarchive:
+    src: "{{ bd_app_dir }}/{{ logstash_repo_file }}"
+    dest: "{{ logstash_install_dir }}/"
+    remote_src: yes
+    extra_opts:
+    - --strip-components=1
+  when: copylogstash.changed
+
+- name: Copy Logstash configs
+  template:
+    src: "{{item}}.j2"
+    dest: "{{ logstash_install_dir }}/config/{{item}}"
+  with_items:
+    - "logstash.conf"
+    - "logstash.yml"
+
+- name: Copy Logstash patterns
+  template:
+    src: "bdpatterns.j2"
+    dest: "{{ logstash_patterns_dir }}/bdpatterns"
+
+- name: Copy Logstash start scripts
+  template:
+    src: "logstash.service.j2"
+    dest: /etc/systemd/system/logstash.service
+    owner: root
+    group: root
+  become: yes
+
+- name: Start Logstash service
+  systemd:
+    daemon_reload: yes
+    state: restarted
+    name: logstash
+  become: yes

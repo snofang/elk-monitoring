@@ -1,0 +1,12 @@
+BD_TIMESTAMP %{YEAR}-%{MONTHNUM}-%{MONTHDAY}( |T)%{HOUR}:%{MINUTE}:%{SECOND}[\.\,]%{MILLISECOND}
+MILLISECOND \d{3}
+MESSAGE_CONTENT %{GREEDYDATA}
+LOG_TYPE (\w+\.)*\w+
+
+STORM_LOG %{BD_TIMESTAMP:timestamp} %{LOG_TYPE:logtype} %{DATA} \[%{LOGLEVEL:loglevel}\] %{MESSAGE_CONTENT:content}
+KAFKA_LOG \[%{BD_TIMESTAMP:timestamp}\] %{LOGLEVEL:loglevel} %{MESSAGE_CONTENT:content}
+ELK_LOG \[%{BD_TIMESTAMP:timestamp}\]\[%{LOGLEVEL:loglevel}\s*\]\[%{LOG_TYPE}\s*\] %{MESSAGE_CONTENT:content}
+ZOOKEEPER_LOG %{BD_TIMESTAMP:timestamp} \[%{DATA}\] - %{LOGLEVEL:loglevel}\s+%{MESSAGE_CONTENT:content}
+BD_LOG %{BD_TIMESTAMP:timestamp} \[%{DATA:logtype}\] %{LOGLEVEL:loglevel} %{MESSAGE_CONTENT:content}
+
+BD_LOG_MESSAGE (?:%{BD_LOG}|%{STORM_LOG}|%{KAFKA_LOG}|%{ELK_LOG}|%{ZOOKEEPER_LOG})

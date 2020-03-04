@@ -1,0 +1,22 @@
+# - hosts: all
+#   tasks:
+#   - include_role:
+#       name: common
+
+- hosts: elastic
+  tasks:
+  - include_role:
+      name: common
+  - include_role:
+      name: jdk
+
+# - hosts: zookeepers:elastic_with_kibanas:storm-supervisors:storm-nimbuses:kafkas
+#   tasks:  
+#   - include_role:
+#       name: logstash
+
+# - hosts: kafkas
+#   tasks:
+#   - include_role:
+#       name: kafka
+

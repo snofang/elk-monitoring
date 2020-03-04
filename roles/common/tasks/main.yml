@@ -1,0 +1,31 @@
+- name: "Update hosts file"
+  lineinfile: 
+    dest: /etc/hosts 
+    regexp: "{{ hostvars[item]['host_ip'] }}.*{{ item }}$"
+    line: "{{ hostvars[item]['host_ip'] }} {{ item }}" 
+    state: present
+  when: hostvars[item]['host_ip'] is defined
+  with_items:
+    - "{{ play_hosts }}"
+  become: yes
+
+# - name: Install JDK8
+#   yum:
+#     name: "java-1.8.0-openjdk"
+#   become: yes
+
+- name: Create Base Directory
+  file:
+    path: "{{ bd_base_dir }}"
+    state: directory
+    owner: "{{ bd_user }}"
+    group: "{{ bd_group }}"
+  become: yes
+
+- name: Create Apps Directory
+  file:
+    path: "{{ bd_app_dir }}"
+    state: directory
+    owner: "{{ bd_user }}"
+    group: "{{ bd_group }}"
+  become: yes

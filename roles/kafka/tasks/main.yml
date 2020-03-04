@@ -1,0 +1,44 @@
+- name: Copy Kafka
+  copy:
+    src: "files/{{kafka_repo_file}}"
+    dest: "{{bd_app_dir}}/{{kafka_repo_file}}"
+  register: copykafka
+
+- name: Create Kafka directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ bd_user }}"
+  with_items:
+    - "{{ kafka_install_dir }}"
+    - "{{ kafka_data_dir }}"
+    - "{{ kafka_logs_dir }}"
+
+- name: Extract Kafka
+  unarchive:
+    src: "{{bd_app_dir}}/{{kafka_repo_file}}"
+    dest: "{{ kafka_install_dir }}/"
+    remote_src: yes
+    extra_opts:
+    - --strip-components=1
+  when: copykafka.changed
+
+- name: Copy Kafka server config
+  template:
+    src: "kafka.server.properties.j2"
+    dest: "{{ kafka_install_dir }}/config/server.properties"
+
+- name: Copy Kafka start scripts
+  template:
+    src: "kafka-systemd.j2"
+    dest: /etc/systemd/system/kafka.service
+    owner: root
+    group: root
+  become: yes
+
+- name: Start Kafka service
+  systemd:
+    daemon_reload: yes
+    state: restarted
+    name: kafka
+  become: yes

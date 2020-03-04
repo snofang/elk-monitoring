@@ -1,0 +1,28 @@
+input {
+    file {
+        path => ["{{bd_logs_dir}}/**/*.log", "{{bd_logs_dir}}/**/*.out"]
+    	codec => multiline {
+    		patterns_dir => "{{logstash_patterns_dir}}"
+    		pattern => "^(\[?)%{BD_TIMESTAMP}(\]?)( |\[)"
+    		negate => true
+    		what => previous
+    	}
+    }
+}
+
+filter {
+	grok {
+		patterns_dir => "{{logstash_patterns_dir}}"
+		match => {"message" => "%{BD_LOG_MESSAGE}" }
+	}
+	date {
+		match => ["timestamp", "yyyy-MM-dd HH:mm:ss.SSS", "yyyy-MM-dd HH:mm:ss,SSS", "ISO8601"]
+		remove_field => ["timestamp"]
+	}
+}
+
+output {
+  elasticsearch {
+    hosts => ["{{ groups['elastic_with_kibanas'] | map('extract', hostvars, ['host_ip']) | join(':9200\",\"') }}:9200"]
+  }
+}

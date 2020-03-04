@@ -1,0 +1,14 @@
+[Unit]
+Description=Kibana
+StartLimitIntervalSec=30
+StartLimitBurst=3
+
+[Service]
+Type=simple
+User={{bd_user}}
+Group={{bd_group}}
+ExecStart={{kibana_install_dir}}/bin/kibana "-c {{kibana_install_dir}}/config/kibana.yml"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
