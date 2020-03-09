@@ -1,5 +1,0 @@
-elastic_repo_file: "elasticsearch-7.6.0-linux-x86_64.tar.gz"
-elastic_install_dir: "{{bd_app_dir}}/elastic"
-elastic_data_dir: "{{bd_data_dir}}/elastic"
-elastic_logs_dir: "{{bd_logs_dir}}/elastic"
-elastic_port: 9200

@@ -1,14 +1,14 @@
 - name: Copy Kibana
   copy:
     src: "files/{{kibana_repo_file}}"
-    dest: "{{bd_app_dir}}/{{kibana_repo_file}}"
+    dest: "{{apps_dir}}/{{kibana_repo_file}}"
   register: copykibana
 
 - name: Create Kibana directories
   file:
     path: "{{ item }}"
     state: directory
-    owner: "{{ bd_user }}"
+    owner: "{{ username }}"
   with_items:
     - "{{ kibana_install_dir }}"
     - "{{ kibana_data_dir }}"
@@ -16,7 +16,7 @@
 
 - name: Extract Kibana
   unarchive:
-    src: "{{ bd_app_dir }}/{{ kibana_repo_file }}"
+    src: "{{ apps_dir }}/{{ kibana_repo_file }}"
     dest: "{{ kibana_install_dir }}/"
     remote_src: yes
     extra_opts:
@@ -33,7 +33,7 @@
     src: "kibana.service.j2"
     dest: /etc/systemd/system/kibana.service
     owner: root
-    group: root
+    usergroup: root
   become: yes
   
 - name: Start Kibana service

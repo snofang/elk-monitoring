@@ -1,23 +1,23 @@
-- name: Copy Elastic
+- name: Copy Elasticsearch
   copy:
-    src: "files/{{elastic_repo_file}}"
-    dest: "{{bd_app_dir}}/{{elastic_repo_file}}"
+    src: "files/{{es_repo_file}}"
+    dest: "{{apps_dir}}/{{es_repo_file}}"
   register: copyelastic
 
-- name: Create Elastic directories
+- name: Create Elasticsearch directories
   file:
     path: "{{ item }}"
     state: directory
-    owner: "{{ bd_user }}"
+    owner: "{{ username }}"
   with_items:
-    - "{{ elastic_install_dir }}"
-    - "{{ elastic_data_dir }}"
-    - "{{ elastic_logs_dir }}"
+    - "{{ es_install_dir }}"
+    - "{{ es_data_dir }}"
+    - "{{ es_logs_dir }}"
 
 - name: Extract Elastic
   unarchive:
-    src: "{{ bd_app_dir }}/{{ elastic_repo_file }}"
-    dest: "{{ elastic_install_dir }}/"
+    src: "{{ apps_dir }}/{{ es_repo_file }}"
+    dest: "{{ es_install_dir }}/"
     remote_src: yes
     extra_opts:
     - --strip-components=1
@@ -26,7 +26,7 @@
 - name: Copy Elastic config
   template:
     src: "elasticsearch.yml.j2"
-    dest: "{{ elastic_install_dir }}/config/elasticsearch.yml"
+    dest: "{{ es_install_dir }}/config/elasticsearch.yml"
 
 - name: Copy Elastic start scripts
   template:
@@ -52,4 +52,4 @@
   become: yes
 
 - name: Wait for Elastic to startup
-  wait_for: host={{host_ip}} port={{elastic_port}} delay=5 connect_timeout=1
+  wait_for: host={{ansible_host}} port={{es_port}} delay=5 connect_timeout=1

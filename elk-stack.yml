@@ -1,14 +1,12 @@
+---
 # - hosts: all
 #   tasks:
 #   - include_role:
 #       name: common
 
-- hosts: elastic
-  tasks:
-  - include_role:
-      name: common
-  - include_role:
-      name: jdk
+- hosts: es
+  roles:
+    - es
 
 # - hosts: zookeepers:elastic_with_kibanas:storm-supervisors:storm-nimbuses:kafkas
 #   tasks:  

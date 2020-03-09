@@ -6,15 +6,15 @@ After=network-online.target
 
 [Service]
 PrivateTmp=true
-Environment=ES_HOME={{ elastic_install_dir }}
-Environment=ES_PATH_CONF={{ elastic_install_dir }}/config
-Environment=PID_DIR={{ elastic_install_dir }}
-WorkingDirectory={{ elastic_install_dir }}
+Environment=ES_HOME={{ es_install_dir }}
+Environment=ES_PATH_CONF={{ es_install_dir }}/config
+Environment=PID_DIR={{ es_install_dir }}
+WorkingDirectory={{ es_install_dir }}
 
-User={{ bd_user }}
-Group={{ bd_group }}
+User={{ username }}
+Group={{ usergroup }}
 
-ExecStart={{ elastic_install_dir }}/bin/elasticsearch -p ${PID_DIR}/elasticsearch.pid --quiet
+ExecStart={{ es_install_dir }}/bin/elasticsearch -p ${PID_DIR}/elasticsearch.pid --quiet
 
 # StandardOutput is configured to redirect to journalctl since
 # some error messages may be logged in standard output before
@@ -37,7 +37,7 @@ LimitFSIZE=infinity
 TimeoutStopSec=0
 # SIGTERM signal is used to stop the Java process
 KillSignal=SIGTERM
-# Send the signal only to the JVM rather than its control group
+# Send the signal only to the JVM rather than its control usergroup
 KillMode=process
 # Java process is never killed
 SendSIGKILL=no
@@ -45,4 +45,4 @@ SendSIGKILL=no
 SuccessExitStatus=143
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-username.target

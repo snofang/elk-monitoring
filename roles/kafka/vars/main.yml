@@ -1,4 +1,4 @@
 kafka_repo_file: "kafka_2.12-2.3.0.tgz"
-kafka_install_dir: "{{bd_app_dir}}/kafka"
-kafka_data_dir: "{{bd_data_dir}}/kafka"
-kafka_logs_dir: "{{bd_logs_dir}}/kafka"
+kafka_install_dir: "{{apps_dir}}/kafka"
+kafka_data_dir: "{{data_dir}}/kafka"
+kafka_logs_dir: "{{logs_dir}}/kafka"

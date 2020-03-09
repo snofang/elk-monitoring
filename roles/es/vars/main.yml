@@ -1,0 +1,5 @@
+es_repo_file: "elasticsearch-7.6.0-linux-x86_64.tar.gz"
+es_install_dir: "{{apps_dir}}/es"
+es_data_dir: "{{data_dir}}/es"
+es_logs_dir: "{{logs_dir}}/es"
+es_port: 9200

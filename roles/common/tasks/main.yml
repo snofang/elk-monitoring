@@ -6,26 +6,23 @@
     state: present
   when: hostvars[item]['host_ip'] is defined
   with_items:
-    - "{{ play_hosts }}"
+    - "{{ ansible_play_batch }}"
   become: yes
-
-# - name: Install JDK8
-#   yum:
-#     name: "java-1.8.0-openjdk"
-#   become: yes
+- debug:
+    msg: playhosts {{ ansible_play_batch }}
 
 - name: Create Base Directory
   file:
-    path: "{{ bd_base_dir }}"
+    path: "{{ base_dir }}"
     state: directory
-    owner: "{{ bd_user }}"
-    group: "{{ bd_group }}"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
   become: yes
 
 - name: Create Apps Directory
   file:
-    path: "{{ bd_app_dir }}"
+    path: "{{ apps_dir }}"
     state: directory
-    owner: "{{ bd_user }}"
-    group: "{{ bd_group }}"
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
   become: yes

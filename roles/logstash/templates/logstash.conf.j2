@@ -1,6 +1,6 @@
 input {
     file {
-        path => ["{{bd_logs_dir}}/**/*.log", "{{bd_logs_dir}}/**/*.out"]
+        path => ["{{logs_dir}}/**/*.log", "{{logs_dir}}/**/*.out"]
     	codec => multiline {
     		patterns_dir => "{{logstash_patterns_dir}}"
     		pattern => "^(\[?)%{BD_TIMESTAMP}(\]?)( |\[)"
@@ -23,6 +23,6 @@ filter {
 
 output {
   elasticsearch {
-    hosts => ["{{ groups['elastic_with_kibanas'] | map('extract', hostvars, ['host_ip']) | join(':9200\",\"') }}:9200"]
+    hosts => ["{{ groups['es'] | map('extract', hostvars, ['host_ip']) | join(':9200\",\"') }}:9200"]
   }
 }

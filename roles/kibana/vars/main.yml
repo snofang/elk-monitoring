@@ -1,6 +1,6 @@
 kibana_repo_file: "kibana-7.2.0-linux-x86_64.tar.gz"
-kibana_install_dir: "{{bd_app_dir}}/kibana"
-kibana_data_dir: "{{bd_data_dir}}/kibana"
-kibana_logs_dir: "{{bd_logs_dir}}/kibana"
+kibana_install_dir: "{{apps_dir}}/kibana"
+kibana_data_dir: "{{data_dir}}/kibana"
+kibana_logs_dir: "{{logs_dir}}/kibana"
 
 kibana_port: 5601

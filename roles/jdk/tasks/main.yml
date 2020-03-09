@@ -1,20 +1,36 @@
-- name: CopyJ jdk
+- name: Copy jdk
   copy:
     src: "files/{{jdk_repo_file}}"
-    dest: "{{bd_app_dir}}/{{jdk_repo_file}}"
+    dest: "{{apps_dir}}/{{jdk_repo_file}}"
   register: copyJdk
 
-- name: Create Elastic directories
+- name: Create es directories
   file:
     path: "{{ jdk_install_dir }}"
     state: directory
-    owner: "{{ bd_user }}"
+    owner: "{{ username }}"
 
 - name: Extract jdk
   unarchive:
-    src: "{{ bd_app_dir }}/{{ jdk_repo_file }}"
-    dest: "{{ elastic_install_dir }}/"
+    src: "{{ apps_dir }}/{{ jdk_repo_file }}"
+    dest: "{{ jdk_install_dir }}/"
     remote_src: yes
     extra_opts:
     - --strip-components=1
   when: copyJdk.changed
+
+- name: make sure /etc/profile.d exists
+  become: True
+  file: 
+    path: /etc/profile.d  
+    state: directory
+
+- name: export JAVA_HOME
+  become: True
+  template:
+    src:  ../templates/java_home.sh.j2
+    dest: /etc/profile.d/java_home.sh
+    mode: "a+x"
+
+- name: Exports/Run java env file for make JAVA_HOME available globally
+  shell: "source /etc/profile.d/java_home.sh"
