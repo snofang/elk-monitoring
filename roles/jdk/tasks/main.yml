@@ -1,22 +1,22 @@
-- name: Copy jdk
+- name: copy jdk
   copy:
     src: "files/{{jdk_repo_file}}"
     dest: "{{apps_dir}}/{{jdk_repo_file}}"
   register: copyJdk
 
-- name: Create es directories
+- name: create jdk directories
   file:
     path: "{{ jdk_install_dir }}"
     state: directory
     owner: "{{ username }}"
 
-- name: Extract jdk
+- name: extract jdk
   unarchive:
     src: "{{ apps_dir }}/{{ jdk_repo_file }}"
     dest: "{{ jdk_install_dir }}/"
     remote_src: yes
     extra_opts:
-    - --strip-components=1
+      - --strip-components=1
   when: copyJdk.changed
 
 - name: make sure /etc/profile.d exists
@@ -31,6 +31,8 @@
     src:  ../templates/java_home.sh.j2
     dest: /etc/profile.d/java_home.sh
     mode: "a+x"
+  register: copy_java_home
 
-- name: Exports/Run java env file for make JAVA_HOME available globally
+- name: sourcing/activating configuration
   shell: "source /etc/profile.d/java_home.sh"
+  when: copy_java_home.changed

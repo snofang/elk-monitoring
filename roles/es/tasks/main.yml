@@ -1,10 +1,10 @@
-- name: Copy Elasticsearch
+- name: copy elasticsearch
   copy:
     src: "files/{{es_repo_file}}"
     dest: "{{apps_dir}}/{{es_repo_file}}"
-  register: copyelastic
+  register: copy_es
 
-- name: Create Elasticsearch directories
+- name: create elasticsearch directories
   file:
     path: "{{ item }}"
     state: directory
@@ -14,27 +14,29 @@
     - "{{ es_data_dir }}"
     - "{{ es_logs_dir }}"
 
-- name: Extract Elastic
+- name: extract elasticsearch
   unarchive:
     src: "{{ apps_dir }}/{{ es_repo_file }}"
     dest: "{{ es_install_dir }}/"
     remote_src: yes
     extra_opts:
       - --strip-components=1
-  when: copyelastic.changed
+  when: copy_es.changed
 
-- name: Copy Elastic config
+- name: copy elasticsearch config
   template:
     src: "elasticsearch.yml.j2"
     dest: "{{ es_install_dir }}/config/elasticsearch.yml"
+  register: copy_es_config
 
-- name: Copy Elastic start scripts
+- name: copy elasticsearch service scripts
   template:
     src: "elastic-systemd.j2"
     dest: /etc/systemd/system/elasticsearch.service
     owner: root
     group: root
   become: yes
+  register: copy_es_service_script
 
 - name: set vm.max_map_count to 262144 in sysctl
   sysctl: 
@@ -44,14 +46,17 @@
   - { key: "vm.max_map_count", value: "262144" }
   become: yes
 
-- name: Start Elastic service
+- name: restart elasticsearch service
   systemd:
     daemon_reload: yes
     state: restarted
-    name: elasticsearch
+    name: elasticsearch.service
+    enabled: yes
   become: yes
+  register: es_restart
+  when: copy_es_service_script.changed or copy_es_config.changed or copy_es.changed
 
-- name: "Waiting for Elasticsearch to come up"
+- name: "waiting for elasticsearch to come up"
   uri:
     url: "http://{{ansible_host}}:{{es_port}}/"
     status_code: "200"
@@ -59,3 +64,24 @@
   until: result.status == 200
   retries: 60
   delay: 5
+  when: es_restart.changed
+
+- name: Making sure elasticsearch is started (in case that there is not any config changes)
+  systemd:
+    state: started
+    name: elasticsearch.service
+    enabled: yes
+    daemon_reload: no
+  become: yes
+  register: es_is_started
+    
+- name: "Waiting for elasticsearch to come up"
+  uri:
+    url: "http://{{ansible_host}}:{{es_port}}/"
+    status_code: "200"
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 5
+  when: es_is_started.changed
+

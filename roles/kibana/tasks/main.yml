@@ -1,10 +1,10 @@
-- name: Copy Kibana
+- name: copy kibana
   copy:
     src: "files/{{kibana_repo_file}}"
     dest: "{{apps_dir}}/{{kibana_repo_file}}"
-  register: copykibana
+  register: copy_kibana
 
-- name: Create Kibana directories
+- name: create kibana directories
   file:
     path: "{{ item }}"
     state: directory
@@ -14,36 +14,41 @@
     - "{{ kibana_data_dir }}"
     - "{{ kibana_logs_dir }}"
 
-- name: Extract Kibana
+- name: extract kibana
   unarchive:
     src: "{{ apps_dir }}/{{ kibana_repo_file }}"
     dest: "{{ kibana_install_dir }}/"
     remote_src: yes
     extra_opts:
       - --strip-components=1
-  when: copykibana.changed
+  when: copy_kibana.changed
 
-- name: Copy Kibana config
+- name: copy kibana config
   template:
     src: "kibana.yml.j2"
     dest: "{{ kibana_install_dir }}/config/kibana.yml"
+  register: copy_kibana_config
 
-- name: Copy Kibana start scripts
+- name: copy kibana service script
   template:
     src: "kibana.service.j2"
     dest: /etc/systemd/system/kibana.service
     owner: root
     group: root
   become: yes
-  
-- name: Start Kibana service
+  register: copy_kibana_service_script
+
+- name: restart kibana service
   systemd:
     daemon_reload: yes
     state: restarted
-    name: kibana
+    name: kibana.service
+    enabled: yes
   become: yes
+  register: restart_kibana_service
+  when: copy_kibana_config.changed or copy_kibana_service_script.changed or copy_kibana.changed
 
-- name: "Wait for Kibana to come up"
+- name: "waiting for kibana to come up"
   uri:
     url: "http://{{ansible_host}}:{{kibana_port}}/"
     status_code: "200"
@@ -51,6 +56,27 @@
   until: result.status == 200
   retries: 60
   delay: 5
+  when: restart_kibana_service.changed
+
+- name: making sure kibana is started (in case that there is not any config change)
+  systemd:
+    state: started
+    name: kibana.service
+    enabled: yes
+    daemon_reload: no
+  become: yes
+  register: kibana_is_started
+
+- name: "waiting for kibana to come up"
+  uri:
+    url: "http://{{ansible_host}}:{{kibana_port}}/"
+    status_code: "200"
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 5
+  when: kibana_is_started.changed
+
 
 #- name: Import Kibana dashboards
 #  uri:
