@@ -20,7 +20,7 @@
     dest: "{{ es_install_dir }}/"
     remote_src: yes
     extra_opts:
-    - --strip-components=1
+      - --strip-components=1
   when: copyelastic.changed
 
 - name: Copy Elastic config
@@ -51,5 +51,11 @@
     name: elasticsearch
   become: yes
 
-- name: Wait for Elastic to startup
-  wait_for: host={{ansible_host}} port={{es_port}} delay=5 connect_timeout=1
+- name: "Waiting for Elasticsearch to come up"
+  uri:
+    url: "http://{{ansible_host}}:{{es_port}}/"
+    status_code: "200"
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 5

@@ -5,8 +5,8 @@ StartLimitBurst=3
 
 [Service]
 Type=simple
-username={{username}}
-usergroup={{usergroup}}
+User={{username}}
+Group={{usergroup}}
 ExecStart={{kibana_install_dir}}/bin/kibana "-c {{kibana_install_dir}}/config/kibana.yml"
 Restart=always
 
