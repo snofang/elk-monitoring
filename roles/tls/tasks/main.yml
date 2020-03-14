@@ -1,0 +1,50 @@
+---
+
+# based on this guide: https://gist.github.com/Soarez/9688998
+
+- name: ca private key
+  local_action:
+    command: openssl genrsa -out {{cert_dir}}/{{tls_ca_key}} {{tls_ca_key_size}}
+  run_once: true
+
+- name: self-signed cert for ca
+  local_action:
+    command:
+      argv:
+        - openssl req -x509 -new -days {{tls_ca_valid_days}} -sha256 -nodes -key {{cert_dir}}/{{tls_ca_key}} -out {{cert_dir}}/{{tls_ca_cert}} -subj
+        - /C={{tls_ca_country}} /ST={{tls_ca_state}} /L={{tls_ca_locality}} /O={{tls_ca_organization}} /OU={{tls_ca_organizationalunit}} /CN={{tls_ca_commonname}} /emailAddress={{tls_ca_email}}
+  run_once: true
+
+- name: server private key
+  local_action:
+    command: openssl genrsa -out {{cert_dir}}/{{tls_ca_key}} {{tls_ca_key_size}}
+
+- name: csr for server cert
+  local_action:
+    command:
+    argv:
+      - openssl req -new -key {{cert_dir}}/{{tls_ca_key}} -nodes -out {{cert_dir}}/{{ansible_host}}.csr -subj
+      - /CN={{ansible_host}}
+
+- name: Generate certificate extensions file
+  local_action:
+    module: template
+    src: templates/server-cert-extfile.cnf.j2
+    dest: "{{cert_dir}}/{{inventory_hostname_short}}-extfile.cnf"
+  when:
+    - tls_server_enable_san
+
+- name: Sign server cert request by CA
+  local_action:
+    module: |
+      shell if [ ! -e {{cert_dir}}/{{inventory_hostname_short}}.pem ]
+      then
+      openssl x509 -req -sha256 -days {{tls_server_valid_days}} \
+      -CA "{{cert_dir}}/{{tls_ca_cert}}" -CAkey "{{cert_dir}}/{{tls_ca_key}}" -set_serial {{ 999999999 | random }} \
+      -in "{{cert_dir}}/{{inventory_hostname_short}}.csr" -out "{{cert_dir}}/{{inventory_hostname_short}}.pem" {% if tls_server_enable_san %}-extfile "{{cert_dir}}/{{inventory_hostname_short}}-extfile.cnf"{% endif %}
+
+      fi
+  args:
+    executable: /bin/bash
+  ignore_errors: true
+
