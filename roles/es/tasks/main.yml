@@ -23,6 +23,32 @@
       - --strip-components=1
   when: copy_es.changed
 
+- name: create elasticsearch certs folder
+  file:
+    path: "{{ es_install_dir }}/config/certs"
+    state: directory
+    owner: "{{ username }}"
+    group: "{{ usergroup }}"
+  become: yes
+
+- name: copy elasticsearch ca cert
+  copy:
+    src: "certs/ca.pem"
+    dest: "{{ es_install_dir }}/config/certs/ca.pem"
+  register: copy_es_cert
+
+- name: copy elasticsearch key
+  copy:
+    src: "certs/{{inventory_hostname}}.key"
+    dest: "{{ es_install_dir }}/config/certs/{{inventory_hostname}}.key"
+  register: copy_es_cert
+
+- name: copy elasticsearch cert
+  copy:
+    src: "certs/{{inventory_hostname}}.pem"
+    dest: "{{ es_install_dir }}/config/certs/{{inventory_hostname}}.pem"
+  register: copy_es_cert
+
 - name: copy elasticsearch config
   template:
     src: "elasticsearch.yml.j2"
@@ -59,9 +85,9 @@
 - name: "waiting for elasticsearch to come up"
   uri:
     url: "http://{{ansible_host}}:{{es_port}}/"
-    status_code: "200"
+    status_code: [200,401]
   register: result
-  until: result.status == 200
+  until: result.status == 200 or result.status == 401
   retries: 60
   delay: 5
   when: es_restart.changed
@@ -78,9 +104,9 @@
 - name: "Waiting for elasticsearch to come up"
   uri:
     url: "http://{{ansible_host}}:{{es_port}}/"
-    status_code: "200"
+    status_code: [200,401]
   register: result
-  until: result.status == 200
+  until: result.status == 200 or result.status == 401
   retries: 60
   delay: 5
   when: es_is_started.changed

@@ -55,7 +55,7 @@
     src: templates/server-cert-extfile.cnf.j2
     dest: "{{cert_dir}}/{{inventory_hostname}}-extfile.cnf"
 
-- name: server cert signing by CA
+- name: server cert signing by CA - pem
   local_action:
     module: |
       shell if [ ! -e {{cert_dir}}/{{inventory_hostname}}.pem ]
@@ -68,3 +68,13 @@
   args:
     executable: /bin/bash
 
+#- name: server cert conversion; pem to pk12
+#  local_action:
+#    module: |
+#      shell if [ ! -e {{cert_dir}}/{{inventory_hostname}}.pfx ]
+#      then
+#      openssl pkcs12 -export -nodes -name "y{{inventory_hostname}}-certificate" \
+#      -out "{{cert_dir}}/{{inventory_hostname}}.pfx" -inkey "{{cert_dir}}/{{inventory_hostname}}.key" -in "{{cert_dir}}/{{inventory_hostname}}.pem"
+#      fi
+#  args:
+#    executable: /bin/bash

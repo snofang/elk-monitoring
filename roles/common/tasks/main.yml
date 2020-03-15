@@ -1,15 +1,8 @@
-#- name: "Update hosts file"
-#  lineinfile:
-#    dest: /etc/hosts
-#    regexp: "{{ hostvars[item]['host_ip'] }}.*{{ item }}$"
-#    line: "{{ hostvars[item]['host_ip'] }} {{ item }}"
-#    state: present
-#  when: hostvars[item]['host_ip'] is defined
-#  with_items:
-#    - "{{ ansible_play_batch }}"
-#  become: yes
-#- debug:
-#    msg: playhosts {{ ansible_play_batch }}
+- name: "Build hosts file"
+  lineinfile: dest=/etc/hosts regexp='.*{{ item }}$' line="{{ hostvars[item].ansible_host }} {{item}}" state=present
+  when: hostvars[item].ansible_host is defined
+  with_items: "{{ groups.all }}"
+  become: yes
 
 - name: Create Base Directory
   file:
