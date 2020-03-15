@@ -2,3 +2,4 @@
 dependencies:
   - role: jdk
   - role: common
+  - role: tls

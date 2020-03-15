@@ -8,13 +8,13 @@ tls_ca_csr: ca.csr
 tls_ca_key: ca.key
 tls_ca_key_size: 4096
 tls_ca_valid_days: 3650
-tls_ca_country: ND
-tls_ca_state: NOT_DEFINED
-tls_ca_locality: ND
-tls_ca_organization: NOT_DEFINED
-tls_ca_organizationalunit: NOT_DEFINED
-tls_ca_commonname: ND Certificate Authority
-tls_ca_email: ND@example.com
+#tls_ca_country:
+#tls_ca_state:
+#tls_ca_locality:
+#tls_ca_organization:
+#tls_ca_organizationalunit:
+tls_ca_commonname: Certificate Authority
+#tls_ca_email:
 
 # server cert
 tls_server_cert: client.pem
@@ -22,5 +22,4 @@ tls_server_key: client.key
 tls_server_csr: client.csr
 tls_server_valid_days: 730
 tls_server_key_size: 4096
-tls_server_enable_san: true
 

@@ -1,3 +1,7 @@
 *.tar.gz
 .idea
 .vagrant
+*.key
+*.csr
+*.pem
+*-extfile.cnf
