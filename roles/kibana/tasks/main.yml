@@ -38,6 +38,9 @@
   become: yes
   register: copy_kibana_service_script
 
+- name: kibana security configuration
+  include: kibana_security.yml
+
 - name: restart kibana service
   systemd:
     daemon_reload: yes

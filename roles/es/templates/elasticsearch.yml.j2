@@ -93,10 +93,12 @@ cluster.initial_master_nodes: [{{ ansible_host }}]
 #
 xpack.security.enabled: true
 xpack.security.transport.ssl.enabled: true
-xpack.security.transport.ssl.verification_mode: full
-xpack.security.transport.ssl.key: certs/{{inventory_hostname}}.key
-xpack.security.transport.ssl.certificate: certs/{{inventory_hostname}}.pem
-xpack.security.transport.ssl.certificate_authorities: [ "certs/ca.pem" ]
+xpack.security.transport.ssl.verification_mode: certificate
+xpack.security.transport.ssl.key: {{es_conf_dir}}/certs/{{inventory_hostname}}.key
+xpack.security.transport.ssl.certificate: {{es_conf_dir}}/certs/{{inventory_hostname}}.pem
+xpack.security.transport.ssl.certificate_authorities: [ "{{es_conf_dir}}/certs/ca.pem" ]
+xpack.security.http.ssl.client_authentication: optional
+#xpack.security.authc.realms.pki1.type: pki
 
 
 

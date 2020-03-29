@@ -61,14 +61,14 @@
 
 - name: "waiting for elasticsearch to come up"
   uri:
-    url: "http://{{ansible_host}}:{{es_port}}/"
+    url: "http://{{ansible_host}}:{{es_api_port}}/"
     method: GET
-    user: "{{es_admin_username}}"
-    password: "{{es_admin_password}}"
+    user: "{{es_users_elastic}}"
+    password: "{{es_passwords_elastic}}"
     force_basic_auth: yes
-    status_code: 200
+    status_code: [200, 401]
   register: result
-  until: result.status == 200
+  until: result.status == 200 or result.status == 401
   retries: 60
   delay: 5
   when: es_restart.changed
@@ -84,15 +84,17 @@
     
 - name: "Waiting for elasticsearch to come up"
   uri:
-    url: "http://{{ansible_host}}:{{es_port}}/"
+    url: "http://{{ansible_host}}:{{es_api_port}}/"
     method: GET
-    user: "{{es_admin_username}}"
-    password: "{{es_admin_password}}"
+    user: "{{es_users_elastic}}"
+    password: "{{es_passwords_elastic}}"
     force_basic_auth: yes
-    status_code: 200
+    status_code: [200, 401]
   register: result
-  until: result.status == 200
+  until: result.status == 200 or result.status == 401
   retries: 60
   delay: 5
   when: es_is_started.changed
 
+- name: include es_builtin_users.yml
+  include: es_builtin_users.yml

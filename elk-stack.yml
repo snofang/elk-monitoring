@@ -4,9 +4,9 @@
   roles:
     - es
 
-- hosts: kibana
-  roles:
-    - kibana
+#- hosts: kibana
+#  roles:
+#    - kibana
 
 # - hosts: zookeepers:elastic_with_kibanas:storm-supervisors:storm-nimbuses:kafkas
 #   tasks:  

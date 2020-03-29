@@ -1,6 +1,7 @@
 kibana_repo_file: "kibana-7.6.0-linux-x86_64.tar.gz"
 kibana_install_dir: "{{apps_dir}}/kibana"
+kibana_conf_dir: "{{kibana_install_dir}}/config"
 kibana_data_dir: "{{data_dir}}/kibana"
 kibana_logs_dir: "{{logs_dir}}/kibana"
-
+kibana_admin_password: changeme
 kibana_port: 5601

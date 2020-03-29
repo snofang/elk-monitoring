@@ -1,0 +1,11 @@
+- name: Update API User Password
+  uri:
+    url: "{{es_api_uri}}/{{es_security_api}}/user/{{es_users_elastic}}/_password"
+    method: POST
+    body_format: json
+    body: "{ \"password\":\"{{es_passwords_elastic}}\" }"
+    status_code: 200
+    user: "{{es_users_elastic}}"
+    password: "{{es_passwords_elastic}}"
+    force_basic_auth: yes
+    validate_certs: no
