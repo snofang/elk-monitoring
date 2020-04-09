@@ -4,4 +4,7 @@ kibana_conf_dir: "{{kibana_install_dir}}/config"
 kibana_data_dir: "{{data_dir}}/kibana"
 kibana_logs_dir: "{{logs_dir}}/kibana"
 kibana_admin_password: changeme
-kibana_port: 5601
+kibana_api_port: 5601
+kibana_api_scheme: "https"
+kibana_api_host: "{{ansible_host}}"
+kibana_api_uri: "{{ kibana_api_scheme }}://{{ kibana_api_host }}:{{ kibana_api_port }}"

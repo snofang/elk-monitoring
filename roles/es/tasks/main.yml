@@ -61,12 +61,13 @@
 
 - name: "waiting for elasticsearch to come up"
   uri:
-    url: "http://{{ansible_host}}:{{es_api_port}}/"
+    url: "{{es_api_uri}}"
     method: GET
     user: "{{es_users_elastic}}"
     password: "{{es_passwords_elastic}}"
     force_basic_auth: yes
     status_code: [200, 401]
+    validate_certs: no
   register: result
   until: result.status == 200 or result.status == 401
   retries: 60
@@ -84,12 +85,13 @@
     
 - name: "Waiting for elasticsearch to come up"
   uri:
-    url: "http://{{ansible_host}}:{{es_api_port}}/"
+    url: "{{es_api_uri}}"
     method: GET
     user: "{{es_users_elastic}}"
     password: "{{es_passwords_elastic}}"
     force_basic_auth: yes
     status_code: [200, 401]
+    validate_certs: no
   register: result
   until: result.status == 200 or result.status == 401
   retries: 60

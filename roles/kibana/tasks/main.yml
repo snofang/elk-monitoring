@@ -53,8 +53,9 @@
 
 - name: "waiting for kibana to come up"
   uri:
-    url: "http://{{ansible_host}}:{{kibana_port}}/"
+    url: "{{kibana_api_uri}}"
     status_code: "200"
+    validate_certs: no
   register: result
   until: result.status == 200
   retries: 60
@@ -72,8 +73,9 @@
 
 - name: "waiting for kibana to come up"
   uri:
-    url: "http://{{ansible_host}}:{{kibana_port}}/"
+    url: "{{kibana_api_uri}}"
     status_code: "200"
+    validate_certs: no
   register: result
   until: result.status == 200
   retries: 60
@@ -83,7 +85,7 @@
 
 #- name: Import Kibana dashboards
 #  uri:
-#    url: http://{{host_ip}}:{{kibana_port}}/api/kibana/dashboards/import?force=true
+#    url: http://{{host_ip}}:{{kibana_api_port}}/api/kibana/dashboards/import?force=true
 #    method: POST
 #    headers:
 #      kbn-xsrf: true

@@ -33,11 +33,11 @@
     path: "{{ kibana_install_dir }}/data/kibana.keystore"
   register: kibana_keystore
 
-- debug:
-    msg: "{{ kibana_install_dir }}/data/kibana.keystore"
-
-- debug:
-    msg: "{{kibana_keystore}}"
+#- debug:
+#    msg: "{{ kibana_install_dir }}/data/kibana.keystore"
+#
+#- debug:
+#    msg: "{{kibana_keystore}}"
 
 - name: create the keystore if it doesn't exist yet
   command: >
@@ -58,7 +58,7 @@
   check_mode: no
 
 - name: create Bootstrap password for elastic user
-  shell: echo "{{kibana_admin_password}}" | {{kibana_install_dir}}/bin/kibana-keystore add -x 'bootstrap.password'
+  shell: echo "{{kibana_admin_password}}" | {{kibana_install_dir}}/bin/kibana-keystore add -x 'elasticsearch.password'
 #  environment:
 #    PATH_DATA: "{{ kibana_data_dir }}"
   when:

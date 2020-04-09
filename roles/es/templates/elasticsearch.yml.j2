@@ -98,12 +98,13 @@ xpack.security.transport.ssl.key: {{es_conf_dir}}/certs/{{inventory_hostname}}.k
 xpack.security.transport.ssl.certificate: {{es_conf_dir}}/certs/{{inventory_hostname}}.pem
 xpack.security.transport.ssl.certificate_authorities: [ "{{es_conf_dir}}/certs/ca.pem" ]
 xpack.security.http.ssl.client_authentication: optional
+xpack.security.http.ssl.enabled: true
+xpack.security.http.ssl.key: {{es_conf_dir}}/certs/{{inventory_hostname}}.key
+xpack.security.http.ssl.certificate: {{es_conf_dir}}/certs/{{inventory_hostname}}.pem
+xpack.security.http.ssl.certificate_authorities: [ "{{es_conf_dir}}/certs/ca.pem" ]
+
+
 #xpack.security.authc.realms.pki1.type: pki
-
-
-
-
-
 #http.cors.enabled: true
 #http.cors.allow-origin: "*"
 #http.max_header_size: 16kb
