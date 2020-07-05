@@ -1,10 +1,10 @@
-- name: Copy Logstash
+- name: copy logstash
   copy:
     src: "files/{{logstash_repo_file}}"
     dest: "{{apps_dir}}/{{logstash_repo_file}}"
   register: copylogstash
 
-- name: Create Logstash directories
+- name: create logstash directories
   file:
     path: "{{ item }}"
     state: directory
@@ -14,8 +14,9 @@
     - "{{ logstash_data_dir }}"
     - "{{ logstash_logs_dir }}"
     - "{{ logstash_patterns_dir }}"
+    - "{{ logstash_pipeline_main_dir }}"
 
-- name: Extract Logstash
+- name: extract logstash
   unarchive:
     src: "{{ apps_dir }}/{{ logstash_repo_file }}"
     dest: "{{ logstash_install_dir }}/"
@@ -24,30 +25,55 @@
     - --strip-components=1
   when: copylogstash.changed
 
-- name: Copy Logstash configs
+- name: config logstash - defaults
   template:
     src: "{{item}}.j2"
-    dest: "{{ logstash_install_dir }}/config/{{item}}"
+    dest: "{{ logstash_conf_dir }}/{{item}}"
   with_items:
-    - "logstash.conf"
     - "logstash.yml"
+    - "pipelines.yml"
+  notify:
+    - restart logstash
 
-- name: Copy Logstash patterns
+- name: config logstash - default main pipeline
   template:
-    src: "bdpatterns.j2"
-    dest: "{{ logstash_patterns_dir }}/bdpatterns"
+    src: "{{item}}.j2"
+    dest: "{{ logstash_pipeline_main_dir }}/{{item}}"
+  with_items:
+    - "10-input.conf"
+    - "20-filter.conf"
+    - "30-output.conf"
+  notify:
+    - restart logstash
 
-- name: Copy Logstash start scripts
+- name: copy logstash start scripts environment variables
   template:
-    src: "logstash.service.j2"
-    dest: /etc/systemd/system/logstash.service
+    src: "logstash_ev.j2"
+    dest: /etc/default/logstash
     owner: root
-    usergroup: root
+    group: root
+    mode: 0755
   become: yes
+  notify:
+    - restart logstash
 
-- name: Start Logstash service
-  systemd:
-    daemon_reload: yes
-    state: restarted
-    name: logstash
+- name: copy logstash start scripts
+  template:
+    src: "logstash.sysv2.j2"
+    dest: /etc/init.d/logstash
+    owner: root
+    group: root
+    mode: 0755
   become: yes
+  notify:
+    - restart logstash
+
+- name: logstash security configuration
+  include: logstash_security.yml
+
+- name: ensure logstash started
+  become: yes
+  service:
+    name: logstash
+    state: started
+    enabled: yes

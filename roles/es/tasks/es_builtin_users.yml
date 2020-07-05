@@ -1,23 +1,89 @@
-- name: Update API User Password - built-in user elastic
-  uri:
-    url: "{{es_api_uri}}/{{es_security_api}}/user/{{es_users_elastic}}/_password"
-    method: POST
-    body_format: json
-    body: "{ \"password\":\"{{es_passwords_elastic}}\" }"
-    status_code: 200
-    user: "{{es_users_elastic}}"
-    password: "{{es_passwords_elastic}}"
-    force_basic_auth: yes
-    validate_certs: no
+- name: es_superuser & es_password befor listing users
+  debug:
+    msg: "{{es_superuser}} -- {{es_superuser_password}}"
 
-- name: Update API User Password - built-in user kibana
+#List current users
+- name: list current users
   uri:
-    url: "{{es_api_uri}}/{{es_security_api}}/user/kibana/_password"
+    url: "{{ es_api_uri }}/{{ es_security_api }}/user"
+    method: GET
+    user: "{{es_superuser}}"
+    password: "{{es_superuser_password}}"
+    force_basic_auth: yes
+    status_code: 200
+    validate_certs: "{{ es_validate_certs }}"
+  register: user_list_response
+  check_mode: no
+
+- name: set fact reserved_users equals user_list_response.json
+  set_fact: reserved_users={{ user_list_response.json | filter_reserved }}
+
+# Current users not inc. those reserved
+- name: set fact current_users equals user_list_response.json.keys not including reserved
+  set_fact: current_users={{ user_list_response.json.keys() | list | difference (reserved_users) }}
+
+- name: set fact users_to_ignore
+  set_fact: users_to_ignore={{ es_users.keys() | list | intersect (reserved_users) }}
+
+#updating elastic user password
+- name: update API uassword - built-in user elastic
+  uri:
+    url: "{{es_api_uri}}/{{es_security_api}}/user/{{es_superuser}}/_password"
     method: POST
     body_format: json
-    body: "{ \"password\":\"{{kibana_admin_password}}\" }"
+    body: "{ \"password\":\"{{es_users[es_superuser].password}}\" }"
     status_code: 200
-    user: "{{es_users_elastic}}"
-    password: "{{es_passwords_elastic}}"
+    user: "{{es_superuser}}"
+    password: "{{es_superuser_password}}"
     force_basic_auth: yes
-    validate_certs: no
+    validate_certs: "{{ es_validate_certs }}"
+
+- name: set fact es_superuser_password
+  set_fact: es_superuser_password={{es_users[es_superuser].password}}
+
+#Update password on all reserved users
+- name: update reserved user passwords
+  uri:
+    url: "{{ es_api_uri }}/{{ es_security_api }}/user/{{ item | urlencode }}/_password"
+    method: POST
+    body_format: json
+    body: "{ \"password\":\"{{es_users[item].password}}\" }"
+    status_code: 200
+    user: "{{es_superuser}}"
+    password: "{{es_superuser_password}}"
+    force_basic_auth: yes
+    validate_certs: "{{ es_validate_certs }}"
+  when: es_users[item].password is defined
+  with_items: "{{ users_to_ignore | default([]) }}"
+
+# update roles
+- name: update roles
+  uri:
+    url: "{{ es_api_uri }}/{{ es_security_api }}/role/{{ item | urlencode }}"
+    method: POST
+    body_format: json
+    body: "{{ es_roles[item] | to_json}}"
+    status_code: 200
+    user: "{{es_superuser}}"
+    password: "{{es_superuser_password}}"
+    force_basic_auth: yes
+    validate_certs: "{{ es_validate_certs }}"
+  with_items: "{{ es_roles.keys() | list | default([]) }}"
+
+- name: set fact users_to_modify
+  set_fact: users_to_modify={{ es_users.keys() | list | difference (reserved_users) }}
+
+#Overwrite all other users NOT inc. those reserved
+- name: Update Non-Reserved Native User Details
+  uri:
+    url: "{{ es_api_uri }}/{{ es_security_api }}/user/{{ item | urlencode }}"
+    method: POST
+    body_format: json
+    body: "{{ es_users[item] | to_json }}"
+    status_code: 200
+    user: "{{es_superuser}}"
+    password: "{{es_superuser_password}}"
+    force_basic_auth: yes
+    validate_certs: "{{ es_validate_certs }}"
+  with_items: "{{ users_to_modify | default([]) }}"
+

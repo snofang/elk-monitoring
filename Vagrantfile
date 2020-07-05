@@ -25,5 +25,23 @@ Vagrant.configure("2") do |config|
     kibana.vm.synced_folder ".", "/vagrant", disabled: true
   end
 
+  config.vm.define "logstash" do |logstash|
+    logstash.vm.box = "centos/7"
+    logstash.vm.box_version = "1905.1"
+    logstash.vm.box_check_update = false
+    logstash.vm.network "forwarded_port", guest: 5044, host: 5044
+    logstash.vm.network "private_network",  ip: "192.168.10.13"
+    logstash.vm.synced_folder ".", "/vagrant", disabled: true
+  end
+
+  config.vm.define "filebeat" do |filebeat|
+    #filebeat.vm.box = "anandbitra/redhat-6.5"
+    #filebeat.vm.box_version = "1.0.0"
+    filebeat.vm.box = "centos/7"
+    filebeat.vm.box_version = "1905.1"
+    filebeat.vm.box_check_update = false
+    filebeat.vm.network "private_network",  ip: "192.168.10.14"
+    filebeat.vm.synced_folder ".", "/vagrant", disabled: true
+  end
 
 end

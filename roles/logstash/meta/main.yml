@@ -1,0 +1,8 @@
+---
+dependencies:
+  - role: common
+  - role: tls
+    vars:
+      tls_copy: yes
+      tls_copy_dir: "{{logstash_certs_dir}}"
+  - role: jdk

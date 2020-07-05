@@ -23,3 +23,7 @@ tls_server_csr: client.csr
 tls_server_valid_days: 730
 tls_server_key_size: 4096
 
+tls_copy: no
+tls_copy_dir: "." #this should be defined by client
+tls_password: changeme
+

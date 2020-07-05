@@ -1,0 +1,21 @@
+---
+
+- name: restart metricbeat
+  become: yes
+  service:
+    name: metricbeat
+    state: restarted
+    enabled: yes
+
+- name: start metricbeat
+  become: yes
+  service:
+    name: metricbeat
+    state: started
+    enabled: yes
+
+- name: stop metricbeat
+  become: yes
+  service:
+    name: metricbeat
+    state: stopped

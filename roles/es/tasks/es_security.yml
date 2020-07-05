@@ -1,32 +1,4 @@
 ---
-#---------TLS certs ----------------
-- name: create elasticsearch certs folder
-  file:
-    path: "{{ es_install_dir }}/config/certs"
-    state: directory
-    owner: "{{ username }}"
-    group: "{{ usergroup }}"
-  become: yes
-
-- name: copy elasticsearch ca cert
-  copy:
-    src: "certs/ca.pem"
-    dest: "{{ es_install_dir }}/config/certs/ca.pem"
-  register: copy_es_cert
-
-- name: copy elasticsearch key
-  copy:
-    src: "certs/{{inventory_hostname}}.key"
-    dest: "{{ es_install_dir }}/config/certs/{{inventory_hostname}}.key"
-  register: copy_es_cert
-
-- name: copy elasticsearch cert
-  copy:
-    src: "certs/{{inventory_hostname}}.pem"
-    dest: "{{ es_install_dir }}/config/certs/{{inventory_hostname}}.pem"
-  register: copy_es_cert
-
-
 
 #--------- bootstrap user ----------------
 
@@ -38,7 +10,7 @@
   environment:
     ES_PATH_CONF: "{{ es_conf_dir }}"
 
-- name: check if bootstrap password is set
+- name: getting list of keys already in keystore
   command: >
     {{es_install_dir}}/bin/elasticsearch-keystore list
   register: list_keystore
@@ -48,12 +20,27 @@
   check_mode: no
 
 - name: bootstrap password for elastic user
-  shell: echo "{{es_passwords_elastic}}" | {{es_install_dir}}/bin/elasticsearch-keystore add -x 'bootstrap.password'
+  shell: echo "{{es_superuser_password}}" | {{es_install_dir}}/bin/elasticsearch-keystore add -x 'bootstrap.password'
   when:
     - list_keystore is defined and 'bootstrap.password' not in list_keystore.stdout_lines
   environment:
     ES_PATH_CONF: "{{ es_conf_dir }}"
 #      no_log: true
+
+- name: setting xpack.security.http.ssl.secure_key_passphrase in keystore
+  shell: echo "{{tls_password}}" | {{es_install_dir}}/bin/elasticsearch-keystore add -x 'xpack.security.http.ssl.secure_key_passphrase'
+  when:
+    - list_keystore is defined and 'xpack.security.http.ssl.secure_key_passphrase' not in list_keystore.stdout_lines
+  environment:
+    ES_PATH_CONF: "{{ es_conf_dir }}"
+
+- name: setting xpack.security.transport.ssl.secure_key_passphrase in keystore
+  shell: echo "{{tls_password}}" | {{es_install_dir}}/bin/elasticsearch-keystore add -x 'xpack.security.transport.ssl.secure_key_passphrase'
+  when:
+    - list_keystore is defined and 'xpack.security.transport.ssl.secure_key_passphrase' not in list_keystore.stdout_lines
+  environment:
+    ES_PATH_CONF: "{{ es_conf_dir }}"
+
 
 - name: Set elasticsearch.keystore Permissions
   become: yes

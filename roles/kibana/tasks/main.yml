@@ -40,6 +40,8 @@
 
 - name: kibana security configuration
   include: kibana_security.yml
+  notify:
+    - restart kibana
 
 - name: restart kibana service
   systemd:
@@ -82,18 +84,23 @@
   delay: 5
   when: kibana_is_started.changed
 
+- name: debugging
+  debug:
+    msg: the value is {{kibana_dashboard_import}} and the path is {{kibana_dashboard_path}}
 
-#- name: Import Kibana dashboards
-#  uri:
-#    url: http://{{host_ip}}:{{kibana_api_port}}/api/kibana/dashboards/import?force=true
-#    method: POST
-#    headers:
-#      kbn-xsrf: true
-#      Content-Type: "application/json"
-#    src: files/kibana-dashboards.json
-#    remote_src: no
-#    return_content: yes
-#  run_once: true
-#  delegate_to: localhost
-#  register: result
-#  failed_when: 'result.json.objects[0].error is defined' #fixme: only checks first entry?
+- name: importing dashboard saved object
+  local_action:
+    module: >
+      shell curl -X POST "{{kibana_api_uri}}/api/saved_objects/_import?overwrite=true"
+      -H "kbn-xsrf: true"
+      -u elastic:{{elastic_password}}
+      --form file=@{{kibana_dashboard_path}}
+      --cacert {{cert_dir}}/{{tls_ca_cert}}
+      --write-out '%{http_code}' --silent
+      --output /dev/null
+  args:
+    executable: /bin/bash
+  register: statusCode
+  failed_when: statusCode.stdout|int != 200
+  when: kibana_dashboard_import
+

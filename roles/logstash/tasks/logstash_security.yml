@@ -1,0 +1,69 @@
+---
+
+- name: checking keystore existance
+  stat:
+    path: "{{logstash_conf_dir}}/logstash.keystore"
+  register: keystore_check
+
+- name: creating keystore
+  shell:
+    cmd: "yes | bin/logstash-keystore create "
+    #stdin: yes
+    chdir: "{{logstash_install_dir}}"
+  args:
+    executable: /bin/bash
+  register: keystore_creation
+  when: keystore_check.stat.exists == false
+
+
+#- name: getting keys already in keystore
+#  shell:
+#    cmd: "bin/logstash-keystore list"
+#    chdir: "{{logstash_install_dir}}"
+#  args:
+#    executable: /bin/bash
+#  register: keystore_list_result
+#  when: keystore_check.stat.exists
+#
+#- name: debug
+#  debug:
+#    msg: "result: {{keystore_list_result.stdout_lines}}"
+
+#- name: removing tls_password from keystore
+#  shell:
+#    cmd: "bin/logstash-keystore remove tls_password"
+#    chdir: "{{logstash_install_dir}}"
+#  args:
+#    executable: /bin/bash
+#  when: "'tls_password' in keystore_list_result.stdout_lines"
+
+- name: putting tls_password in keystore
+  shell:
+    cmd: "bin/logstash-keystore add tls_password --stdin"
+    stdin: "{{tls_password}}"
+    chdir: "{{logstash_install_dir}}"
+  args:
+    executable: /bin/bash
+  register: keystore_put_tls_password
+  failed_when: "'ERROR' in keystore_put_tls_password.stdout"
+  notify:
+    - restart logstash
+
+#- name: removing logstash_password from keystore
+#  shell:
+#    cmd: "bin/logstash-keystore remove logstash_password"
+#    chdir: "{{logstash_install_dir}}"
+#  args:
+#    executable: /bin/bash
+#  when: "'logstash_password' in keystore_list_result.stdout_lines"
+
+- name: putting logstash_password in keystore
+  shell:
+    cmd: "bin/logstash-keystore add logstash_password --stdin"
+    stdin: "{{logstash_password}}"
+    chdir: "{{logstash_install_dir}}"
+  args:
+    executable: /bin/bash
+  notify:
+    - restart logstash
+

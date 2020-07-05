@@ -1,31 +1,4 @@
 ---
-#---------TLS certs ----------------
-- name: create kibana certs folder
-  file:
-    path: "{{ kibana_install_dir }}/config/certs"
-    state: directory
-    owner: "{{ username }}"
-    group: "{{ usergroup }}"
-  become: yes
-
-- name: copy kibana ca cert
-  copy:
-    src: "certs/ca.pem"
-    dest: "{{ kibana_conf_dir }}/certs/ca.pem"
-  register: copy_es_cert
-
-- name: copy kibana key
-  copy:
-    src: "certs/{{inventory_hostname}}.key"
-    dest: "{{ kibana_conf_dir }}/certs/{{inventory_hostname}}.key"
-  register: copy_es_cert
-
-- name: copy kibana cert
-  copy:
-    src: "certs/{{inventory_hostname}}.pem"
-    dest: "{{ kibana_conf_dir }}/certs/{{inventory_hostname}}.pem"
-  register: copy_es_cert
-
 
 #--------- bootstrap user ----------------
 - name: check if kibana keystore already exists
@@ -48,19 +21,36 @@
 #    PATH_DATA: "{{ kibana_data_dir }}"
   when: not kibana_keystore.stat.exists
 
-- name: check if bootstrap password is set
-  command: >
-    {{kibana_install_dir}}/bin/kibana-keystore list
-#  environment:
-#    PATH_DATA: "{{ kibana_data_dir }}"
-  register: list_keystore
-  changed_when: False
-  check_mode: no
+#- name: getting list of available keys in keystore
+#  command: >
+#    {{kibana_install_dir}}/bin/kibana-keystore list
+##  environment:
+##    PATH_DATA: "{{ kibana_data_dir }}"
+#  register: list_keystore
+#  changed_when: False
+#  check_mode: no
 
-- name: create Bootstrap password for elastic user
-  shell: echo "{{kibana_admin_password}}" | {{kibana_install_dir}}/bin/kibana-keystore add -x 'elasticsearch.password'
+- name: put kibana password in keystore
+  shell: echo "{{kibana_password}}" | {{kibana_install_dir}}/bin/kibana-keystore add -xf 'elasticsearch.password'
 #  environment:
 #    PATH_DATA: "{{ kibana_data_dir }}"
-  when:
-    - list_keystore is defined and 'bootstrap.password' not in list_keystore.stdout_lines
+#  when:
+#    - list_keystore is defined and 'bootstrap.password' not in list_keystore.stdout_lines
+  no_log: true
+
+
+- name: adding server.ssl.keyPassphrase to keystore
+  shell: echo "{{tls_password}}" | {{kibana_install_dir}}/bin/kibana-keystore add -xf 'server.ssl.keyPassphrase'
+  #  environment:
+  #    PATH_DATA: "{{ kibana_data_dir }}"
+#  when:
+#    - list_keystore is defined and 'server.ssl.keyPassphrase' not in list_keystore.stdout_lines
+  no_log: true
+
+- name: adding elasticsearch.ssl.keyPassphrase to keystore
+  shell: echo "{{tls_password}}" | {{kibana_install_dir}}/bin/kibana-keystore add -xf 'elasticsearch.ssl.keyPassphrase'
+  #  environment:
+  #    PATH_DATA: "{{ kibana_data_dir }}"
+#  when:
+#    - list_keystore is defined and 'elasticsearch.ssl.keyPassphrase' not in list_keystore.stdout_lines
   no_log: true

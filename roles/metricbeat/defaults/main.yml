@@ -1,0 +1,13 @@
+metricbeat_repo_file: "metricbeat-7.6.0-linux-x86_64.tar.gz"
+metricbeat_install_dir: "{{apps_dir}}/metricbeat"
+metricbeat_conf_dir: "{{metricbeat_install_dir}}"
+metricbeat_data_dir: "{{data_dir}}/metricbeat"
+metricbeat_logs_dir: "{{logs_dir}}/metricbeat"
+metricbeat_certs_dir: "{{metricbeat_conf_dir}}/certs"
+logstash_input_port: 5044
+metricbeat_additional_fields_file: "files/metricbeat_additional_fields.yml"
+metricbeat_additional_fields: "{{lookup('template', '{{metricbeat_additional_fields_file}}') }}"
+metricbeat_module_configs_file: "files/metricbeat_module_configs.yml"
+metricbeat_module_configs: "{{lookup('template', '{{metricbeat_module_configs_file}}') }}"
+metricbeat_name: metricbeat
+tls_password: changeme

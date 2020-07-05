@@ -1,0 +1,7 @@
+---
+dependencies:
+  - role: common
+  - role: tls
+    vars:
+      tls_copy: yes
+      tls_copy_dir: "{{metricbeat_certs_dir}}"

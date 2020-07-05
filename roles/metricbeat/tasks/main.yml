@@ -1,0 +1,74 @@
+- name: copy metricbeat
+  copy:
+    src: "files/{{metricbeat_repo_file}}"
+    dest: "{{apps_dir}}/{{metricbeat_repo_file}}"
+  register: copymetricbeat
+
+- name: create metricbeat directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ username }}"
+  with_items:
+    - "{{ metricbeat_install_dir }}"
+    - "{{ metricbeat_data_dir }}"
+    - "{{ metricbeat_logs_dir }}"
+
+- name: extract metricbeat
+  unarchive:
+    src: "{{ apps_dir }}/{{ metricbeat_repo_file }}"
+    dest: "{{ metricbeat_install_dir }}/"
+    remote_src: yes
+    extra_opts:
+    - --strip-components=1
+  register: metricbeat_files
+  when: copymetricbeat.changed
+  notify:
+    - restart metricbeat
+
+- name: copy metricbeat configs
+  template:
+    src: "{{item}}.j2"
+    dest: "{{ metricbeat_conf_dir }}/{{item}}"
+  with_items:
+    - "metricbeat.yml"
+  notify:
+    - restart metricbeat
+
+- name: copy metricbeat start scripts
+  template:
+    src: "metricbeat.sysv2.j2"
+    dest: /etc/init.d/metricbeat
+    owner: root
+    group: root
+    mode: 0755
+  become: yes
+  notify:
+    - restart metricbeat
+
+#- name: metricbeat security configuration
+#  include: metricbeat_security.yml
+
+- name: checking keystore existance
+  stat:
+    path: "{{metricbeat_data_dir}}/metricbeat.keystore"
+  register: keystore_stat_result
+
+- name: creating keystore
+  shell:
+    cmd: "./metricbeat keystore create"
+    chdir: "{{metricbeat_install_dir}}"
+  args:
+    executable: /bin/bash
+  when: not keystore_stat_result.stat.exists
+
+- name: putting tls password in keystore
+  shell:
+    cmd: "./metricbeat keystore add tls_password --stdin --force"
+    stdin: "{{tls_password}}"
+    chdir: "{{metricbeat_install_dir}}"
+  args:
+    executable: /bin/bash
+  register: keystore_tls_password_add
+  notify:
+    - restart metricbeat

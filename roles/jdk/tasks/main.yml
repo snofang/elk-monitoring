@@ -22,7 +22,7 @@
 - name: make sure /etc/profile.d exists
   become: True
   file: 
-    path: /etc/profile.d  
+    path: /etc/profile.d
     state: directory
 
 - name: export JAVA_HOME
@@ -33,6 +33,29 @@
     mode: "a+x"
   register: copy_java_home
 
-- name: sourcing/activating configuration
+- name: sourcing/activating configuration in /etc/profile.d
   shell: "source /etc/profile.d/java_home.sh"
   when: copy_java_home.changed
+
+- name: Set JAVA_HOME in /etc/environment too!
+  lineinfile:
+    dest: /etc/environment
+    state: present
+    regexp: '^export JAVA_HOME='
+    line: "export JAVA_HOME={{ jdk_install_dir }}"
+  become: true
+  register: copy_env_java
+
+#- name: updating PATH to include JAVA_HOME in /etc/environment too!
+#  lineinfile:
+#    dest: /etc/environment
+#    state: present
+#    regexp: '^export PATH=\$JAVA_HOME/bin'
+#    line: "export PATH=$JAVA_HOME/bin:$PATH"
+#  become: true
+#  ignore_errors: true
+#  register: copy_env_path
+
+- name: sourcing/activating configuration in /etc/environment
+  shell: "source /etc/environment"
+  when: copy_env_java.changed

@@ -1,20 +1,86 @@
 ---
-
+#------ elasticsearch --------
 - hosts: es
   roles:
+    - role: es
+      vars:
+        es_bootstrap_system_call_filter: false
+        es_superuser_password: "Elastic@123"
+        es_users:
+          elastic:
+            password: "Elastic@123"
+            roles:
+              - _system
+          kibana:
+            password: "kibana_pwd"
+            roles:
+              - _system
+          logstash_internal:
+            password: "logstash_pwd"
+            roles:
+              - logstash_internal
+          operator:
+            password: "Operator@123"
+            roles:
+              - all_reader
+              - kibana_dashboard_only_user
+
+  tags:
     - es
 
+#------ kibana --------
 - hosts: kibana
-  roles:
+  tasks:
+    - include_role:
+        name: kibana
+      vars:
+        elastic_password: "Elastic@123"
+        kibana_password: "kibana_pwd"
+        kibana_dashboard_import: yes
+        kibana_dashboard_path: [files/dashboard.ndjson]
+  tags:
     - kibana
 
-# - hosts: zookeepers:elastic_with_kibanas:storm-supervisors:storm-nimbuses:kafkas
-#   tasks:  
-#   - include_role:
-#       name: logstash
+#------ logstash --------
+- hosts: logstash
+  tasks:
+    - include_role:
+        name: logstash
+      vars:
+        logstash_password: "logstash_pwd"
+  tags:
+    - logstash
 
-# - hosts: kafkas
-#   tasks:
-#   - include_role:
-#       name: kafka
+#------ filebeat --------
+- hosts: filebeat
+  tasks:
+    - include_role:
+        name: filebeat
+      vars:
+        filebeat_multiline_match: after
+        filebeat_multiline_negate: true
+        filebeat_multiline_pattern: ^[\d]{4}(-[\d]{2}){2}
+        filebeat_fields:
+          event: x-log
+          app: x
+        filebeat_paths:
+          - "{{filebeat_data_dir}}/*log"
+        filebeat_delete_registry: yes
+    - name: copy sample logs
+      copy:
+        src: "sample.log"
+        dest: "/opt/data/filebeat/sample.log"
+
+
+  tags:
+    - filebeat
+
+#------ metricbeat --------
+- hosts: metricbeat
+  tasks:
+    - include_role:
+        name: metricbeat
+  tags:
+    - metricbeat
+
 

@@ -1,0 +1,62 @@
+es_repo_file: "elasticsearch-7.6.0-linux-x86_64.tar.gz"
+es_install_dir: "{{apps_dir}}/es"
+es_conf_dir: "{{es_install_dir}}/config"
+es_certs_dir: "{{es_conf_dir}}/certs"
+es_data_dir: "{{data_dir}}/es"
+es_logs_dir: "{{logs_dir}}/es"
+es_superuser: "elastic"
+es_superuser_password: "changeme"
+es_api_port: 9200
+es_api_host: "{{ansible_host}}"
+es_api_uri: "https://{{ es_api_host }}:{{ es_api_port }}"
+es_security_api: "_security"
+es_validate_certs: no
+tls_password: "changeme"
+es_bootstrap_system_call_filter: true
+
+#es_password_kibana: "changeme"
+#es_users_logstash: "logstash_internal"
+#es_passwords_logstash: "changeme"
+
+
+es_roles:
+  logstash_internal:
+    cluster:
+      - manage_index_templates
+      - monitor
+      - manage_ilm
+    indices:
+      - names: '*'
+        privileges:
+          - write
+          - create
+          - delete
+          - create_index
+          - manage
+          - manage_ilm
+  all_reader:
+    cluster:
+      - all
+    indices:
+      - names: '*'
+        privileges:
+          - read
+
+
+
+es_users:
+  elastic:
+    password: changeme
+    roles:
+      - _system
+  kibana:
+    password: changeme
+    roles:
+      - _system
+  logstash_internal:
+    password: changeme
+    roles:
+      - logstash_internal
+
+
+

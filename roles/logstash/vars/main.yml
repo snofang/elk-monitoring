@@ -1,5 +1,0 @@
-logstash_repo_file: "logstash-7.2.0.tar.gz"
-logstash_install_dir: "{{apps_dir}}/logstash"
-logstash_data_dir: "{{data_dir}}/logstash"
-logstash_logs_dir: "{{logs_dir}}/logstash"
-logstash_patterns_dir: "{{apps_dir}}/logstash/patterns"

@@ -29,42 +29,71 @@
     dest: "{{ es_install_dir }}/config/elasticsearch.yml"
   register: copy_es_config
 
-- name: copy elasticsearch service scripts
+- name: copy es start scripts environment variables
   template:
-    src: "elastic-systemd.j2"
-    dest: /etc/systemd/system/elasticsearch.service
+    src: "elasticsearch_ev.j2"
+    dest: /etc/default/elasticsearch
     owner: root
     group: root
+    mode: 0755
   become: yes
   register: copy_es_service_script
 
-- name: set vm.max_map_count to 262144 in sysctl
-  sysctl: 
-    name: "{{ item.key }}"
-    value: "{{ item.value }}"
-  with_items:
-  - { key: "vm.max_map_count", value: "262144" }
+- name: copy es start scripts
+  template:
+    src: "elasticsearch.sysv2.j2"
+    dest: /etc/init.d/elasticsearch
+    owner: root
+    group: root
+    mode: 0755
   become: yes
+  register: copy_es_service_script
+
+#- name: set vm.max_map_count to 262144 in sysctl
+#  sysctl:
+#    name: "{{ item.key }}"
+#    value: "{{ item.value }}"
+#  with_items:
+#  - { key: "vm.max_map_count", value: "262144" }
+#  become: yes
+
+- name: configure system settings, file descriptors and number of threads
+  pam_limits:
+    domain: "{{username}}"
+    limit_type: "{{item.limit_type}}"
+    limit_item: "{{item.limit_item}}"
+    value: "{{item.value}}"
+  with_items:
+    - { limit_type: '-', limit_item: 'nofile', value: 65535 }
+    - { limit_type: '-', limit_item: 'nproc', value: 4096}
+#    - { limit_type: 'soft', limit_item: 'memlock', value: unlimited }
+#    - { limit_type: 'hard', limit_item: 'memlock', value: unlimited }
+  become: yes
+  register: system_limit_change
+
+- name: reload settings from all system configuration files
+  shell: sysctl --system
+  become: yes
+  when: system_limit_change.changed
 
 - name: include es_security.yml
   include: es_security.yml
 
 - name: restart elasticsearch service
-  systemd:
-    daemon_reload: yes
+  service:
     state: restarted
-    name: elasticsearch.service
+    name: elasticsearch
     enabled: yes
   become: yes
   register: es_restart
-  when: copy_es_service_script.changed or copy_es_config.changed or copy_es.changed
+  when: copy_es_service_script.changed or copy_es_config.changed or copy_es.changed or system_limit_change.changed
 
 - name: "waiting for elasticsearch to come up"
   uri:
     url: "{{es_api_uri}}"
     method: GET
-    user: "{{es_users_elastic}}"
-    password: "{{es_passwords_elastic}}"
+    user: "{{es_superuser}}"
+    password: "{{es_superuser_password}}"
     force_basic_auth: yes
     status_code: [200, 401]
     validate_certs: no
@@ -75,11 +104,10 @@
   when: es_restart.changed
 
 - name: Making sure elasticsearch is started (in case that there is not any config changes)
-  systemd:
+  service:
     state: started
-    name: elasticsearch.service
+    name: elasticsearch
     enabled: yes
-    daemon_reload: no
   become: yes
   register: es_is_started
     
@@ -87,8 +115,8 @@
   uri:
     url: "{{es_api_uri}}"
     method: GET
-    user: "{{es_users_elastic}}"
-    password: "{{es_passwords_elastic}}"
+    user: "{{es_superuser}}"
+    password: "{{es_superuser_password}}"
     force_basic_auth: yes
     status_code: [200, 401]
     validate_certs: no

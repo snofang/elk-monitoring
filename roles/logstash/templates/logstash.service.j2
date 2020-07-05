@@ -2,13 +2,29 @@
 Description=Logstash
 StartLimitIntervalSec=30
 StartLimitBurst=3
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=simple
-username={{username}}
-usergroup={{usergroup}}
-ExecStart={{logstash_install_dir}}/bin/logstash
+User={{username}}
+Group={{usergroup}}
+Environment="JAVA_HOME={{jdk_install_dir}}"
+Environment="LS_HOME={{logstash_install_dir}}"
+Environment="LS_SETTINGS_DIR={{logstash_conf_dir}}"
+Environment=LS_PIDFILE={{logstash_data_dir}}/logstash.pid"
+Environment="LS_USER={{username}}"
+Environment="LS_GROUP={{usergroup}}"
+Environment="LS_GC_LOG_FILE={{logstash_logs_dir}}/gc.log"
+Environment="LS_OPEN_FILES=16384"
+Environment="LS_NICE="19
+Environment="SERVICE_NAME=logstash"
+Environment="SERVICE_DESCRIPTION=logstash"
+ExecStart={{logstash_install_dir}}/bin/logstash "--path.settings" "{{logstash_conf_dir}}"
 Restart=always
+WorkingDirectory={{logstash_install_dir}}
+Nice=19
+LimitNOFILE=16384
 
 [Install]
 WantedBy=multi-username.target

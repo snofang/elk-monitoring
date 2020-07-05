@@ -1,0 +1,21 @@
+---
+
+- name: restart logstash
+  become: yes
+  service:
+    name: logstash
+    state: restarted
+    enabled: yes
+
+- name: start logstash
+  become: yes
+  service:
+    name: logstash
+    state: started
+    enabled: yes
+
+- name: stop logstash
+  become: yes
+  service:
+    name: logstash
+    state: stopped

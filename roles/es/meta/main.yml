@@ -3,3 +3,6 @@ dependencies:
   - role: jdk
   - role: common
   - role: tls
+    vars:
+      tls_copy: yes
+      tls_copy_dir: "{{es_certs_dir}}"

@@ -1,0 +1,20 @@
+metricbeat.modules:
+  - module: system
+    period: 30s
+    metricsets:
+      - cpu
+      - load
+      - memory
+      - network
+      - process
+      - process_summary
+      #- core
+      - diskio
+      #- socket
+    processors:
+      - drop_fields:
+          fields: ["system.process.cmdline"]
+
+    process.include_top_n:
+      by_cpu: 5      # include top 5 processes by CPU
+      by_memory: 5   # include top 5 processes by memory

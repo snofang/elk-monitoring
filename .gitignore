@@ -4,4 +4,7 @@
 *.key
 *.csr
 *.pem
+*.p8
+*.p12
 *-extfile.cnf
+*.log

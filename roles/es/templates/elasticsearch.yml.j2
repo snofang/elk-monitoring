@@ -27,14 +27,17 @@
 #node.attr.rack: r1
 #
 # ----------------------------------- Paths ------------------------------------
+
 #
 # Path to directory where to store the data (separate multiple locations by comma):
 #
-path.data: {{ es_data_dir }}
+path.data: {{es_data_dir}}
+
 #
 # Path to log files:
 #
-path.logs: {{ es_data_dir }}
+path.logs: {{es_logs_dir}}
+
 #
 # ----------------------------------- Memory -----------------------------------
 #
@@ -94,17 +97,19 @@ cluster.initial_master_nodes: [{{ ansible_host }}]
 xpack.security.enabled: true
 xpack.security.transport.ssl.enabled: true
 xpack.security.transport.ssl.verification_mode: certificate
+#xpack.security.transport.ssl.verification_mode: full
 xpack.security.transport.ssl.key: {{es_conf_dir}}/certs/{{inventory_hostname}}.key
 xpack.security.transport.ssl.certificate: {{es_conf_dir}}/certs/{{inventory_hostname}}.pem
 xpack.security.transport.ssl.certificate_authorities: [ "{{es_conf_dir}}/certs/ca.pem" ]
-xpack.security.http.ssl.client_authentication: optional
+xpack.security.transport.ssl.supported_protocols: ["TLSv1.2"]
+
 xpack.security.http.ssl.enabled: true
 xpack.security.http.ssl.key: {{es_conf_dir}}/certs/{{inventory_hostname}}.key
+#xpack.security.http.ssl.secure_key_passphrase: ${xpack.security.http.ssl.secure_key_passphrase}
 xpack.security.http.ssl.certificate: {{es_conf_dir}}/certs/{{inventory_hostname}}.pem
 xpack.security.http.ssl.certificate_authorities: [ "{{es_conf_dir}}/certs/ca.pem" ]
+xpack.security.http.ssl.supported_protocols: ["TLSv1.2"]
 
+logger.org.elasticsearch.transport: info
+bootstrap.system_call_filter: {{es_bootstrap_system_call_filter}}
 
-#xpack.security.authc.realms.pki1.type: pki
-#http.cors.enabled: true
-#http.cors.allow-origin: "*"
-#http.max_header_size: 16kb

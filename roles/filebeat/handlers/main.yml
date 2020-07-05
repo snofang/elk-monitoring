@@ -1,0 +1,21 @@
+---
+
+- name: restart filebeat
+  become: yes
+  service:
+    name: filebeat
+    state: restarted
+    enabled: yes
+
+- name: start filebeat
+  become: yes
+  service:
+    name: filebeat
+    state: started
+    enabled: yes
+
+- name: stop filebeat
+  become: yes
+  service:
+    name: filebeat
+    state: stopped

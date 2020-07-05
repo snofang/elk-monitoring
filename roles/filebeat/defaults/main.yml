@@ -1,0 +1,15 @@
+filebeat_repo_file: "filebeat-7.6.0-linux-x86_64.tar.gz"
+filebeat_install_dir: "{{apps_dir}}/filebeat"
+filebeat_conf_dir: "{{filebeat_install_dir}}"
+filebeat_data_dir: "{{data_dir}}/filebeat"
+filebeat_logs_dir: "{{logs_dir}}/filebeat"
+filebeat_certs_dir: "{{filebeat_conf_dir}}/certs"
+filebeat_paths:
+  - /var/log/*.log
+logstash_input_port: 5044
+filebeat_multiline_match: after
+filebeat_multiline_negate: false
+filebeat_multiline_pattern: ^\[
+filebeat_fields: {}
+filebeat_delete_registry: no
+tls_password: changeme

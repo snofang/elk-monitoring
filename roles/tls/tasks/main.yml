@@ -36,7 +36,19 @@
     module: |
       shell if [ ! -e {{cert_dir}}/{{inventory_hostname}}.key ]
       then
-      openssl genrsa -out {{cert_dir}}/{{inventory_hostname}}.key {{tls_ca_key_size}}
+      openssl genrsa -aes128 -out {{cert_dir}}/{{inventory_hostname}}.key -passout pass:{{tls_password}} {{tls_ca_key_size}}
+      fi
+  args:
+    executable: /bin/bash
+
+#openssl pkcs8 -in certs/logstash.key -topk8 -nocrypt -out certs/logstash_pkcs8.key
+
+- name: server private key - pkcs8 format
+  local_action:
+    module: |
+      shell if [ ! -e {{cert_dir}}/{{inventory_hostname}}.p8 ]
+      then
+      openssl pkcs8 -in {{cert_dir}}/{{inventory_hostname}}.key -passin pass:{{tls_password}} -topk8 -passout pass:{{tls_password}} -out {{cert_dir}}/{{inventory_hostname}}.p8 -v1 PBE-SHA1-3DES
       fi
   args:
     executable: /bin/bash
@@ -44,7 +56,7 @@
 - name: server csr
   local_action:
     module: |
-      shell openssl req -new -key {{cert_dir}}/{{inventory_hostname}}.key -nodes -out {{cert_dir}}/{{inventory_hostname}}.csr -subj \
+      shell openssl req -new -key {{cert_dir}}/{{inventory_hostname}}.key -passin pass:{{tls_password}} -nodes -out {{cert_dir}}/{{inventory_hostname}}.csr -subj \
       "/CN={{inventory_hostname}}"
   args:
     executable: /bin/bash
@@ -68,13 +80,68 @@
   args:
     executable: /bin/bash
 
-#- name: server cert conversion; pem to pk12
-#  local_action:
-#    module: |
-#      shell if [ ! -e {{cert_dir}}/{{inventory_hostname}}.pfx ]
-#      then
-#      openssl pkcs12 -export -nodes -name "y{{inventory_hostname}}-certificate" \
-#      -out "{{cert_dir}}/{{inventory_hostname}}.pfx" -inkey "{{cert_dir}}/{{inventory_hostname}}.key" -in "{{cert_dir}}/{{inventory_hostname}}.pem"
-#      fi
-#  args:
-#    executable: /bin/bash
+# to convent pem certs to pkcs12
+# openssl pkcs12 -export -out certificate.p12 -inkey privateKey.key -in certificate.crt -certfile CACert.crt
+
+- name: server cert conversion; pem to pk12
+  local_action:
+    module: |
+      shell if [ ! -e {{cert_dir}}/{{inventory_hostname}}.p12 ]
+      then
+      openssl pkcs12 -export \
+      -chain -CAfile {{cert_dir}}/{{tls_ca_cert}} \
+      -out "{{cert_dir}}/{{inventory_hostname}}.p12" \
+      -passout pass:"{{tls_password}}" \
+      -inkey "{{cert_dir}}/{{inventory_hostname}}.key" \
+      -passin pass:"{{tls_password}}" \
+      -in "{{cert_dir}}/{{inventory_hostname}}.pem" \
+      -certfile "{{cert_dir}}/{{tls_ca_cert}}"
+      fi
+  args:
+    executable: /bin/bash
+
+
+
+
+#---------TLS certs ----------------
+- name: copy generated certs and key
+  block:
+    - name: create certs folder
+      file:
+        path: "{{ tls_copy_dir }}"
+        state: directory
+        owner: "{{ username }}"
+        group: "{{ usergroup }}"
+      become: yes
+
+    - name: copy ca cert
+      copy:
+        src: "{{cert_dir}}/{{tls_ca_cert}}"
+        dest: "{{ tls_copy_dir }}/{{tls_ca_cert}}"
+      register: copy_ca_cert
+
+    - name: copy host key
+      copy:
+        src: "{{cert_dir}}/{{inventory_hostname}}.key"
+        dest: "{{ tls_copy_dir }}/{{inventory_hostname}}.key"
+      register: copy_host_key
+
+    - name: copy host key - pkcs8 format
+      copy:
+        src: "{{cert_dir}}/{{inventory_hostname}}.p8"
+        dest: "{{ tls_copy_dir }}/{{inventory_hostname}}.p8"
+      register: copy_host_key_pkcs8
+
+    - name: copy host key - pkcs12 format
+      copy:
+        src: "{{cert_dir}}/{{inventory_hostname}}.p12"
+        dest: "{{ tls_copy_dir }}/{{inventory_hostname}}.p12"
+      register: copy_host_key_pkcs12
+
+    - name: copy host cert
+      copy:
+        src: "{{cert_dir}}/{{inventory_hostname}}.pem"
+        dest: "{{ tls_copy_dir }}/{{inventory_hostname}}.pem"
+      register: copy_host_cert
+
+  when: tls_copy and tls_copy_dir is defined
